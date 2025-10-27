@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
     {
         struct stat status;
 
-        if (stat(argv[i], &status) == -1)
+        if (lstat(argv[i], &status) == -1)
         {
             perror(argv[i]);
             exit(1);
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            printf(" %s", for_u_name->pw_name);\
+            printf(" %s", for_u_name->pw_name);
         }
         if ((for_g_name = getgrgid(status.st_gid)) == NULL)
         {
