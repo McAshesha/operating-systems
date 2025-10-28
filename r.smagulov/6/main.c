@@ -101,7 +101,7 @@ int main() {
             if (timeout) {
                 printf("\nВремя вышло! Вот весь текст:\n");
                 print_all_lines(fd, lines, line_count);
-                printf("");
+                printf("\n");
                 break;
             }
         }
