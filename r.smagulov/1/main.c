@@ -60,9 +60,11 @@ int main(int argc, char *argv[]) {
                 printf("PID = %d, PPID = %d, PGID = %d\n", getpid(), getppid(), getpgrp());
                 break;
             case 'u': {
-                struct rlimit rl;
-                if (getrlimit(RLIMIT_FSIZE, &rl) == 0) {
-                    printf("ulimit = %ld\n", (long)rl.rlim_cur);
+                long max_proc = sysconf(_SC_CHILD_MAX);
+                if (max_proc != -1) {
+                    printf("ulimit = %ld\n", max_proc);
+                } else {
+                    perror("sysconf");
                 }
                 break;
             }
@@ -73,9 +75,9 @@ int main(int argc, char *argv[]) {
                     fprintf(stderr, "Неверное значение для -U: %s\n", opts[i].arg);
                 } else {
                     struct rlimit rl;
-                    if (getrlimit(RLIMIT_FSIZE, &rl) == 0) {
+                    if (getrlimit(RLIMIT_NOFILE, &rl) == 0) {
                         rl.rlim_cur = val;
-                        if (setrlimit(RLIMIT_FSIZE, &rl) == -1) {
+                        if (setrlimit(RLIMIT_NOFILE, &rl) == -1) {
                             perror("setrlimit");
                         } else {
                             printf("ulimit изменён на %ld\n", val);

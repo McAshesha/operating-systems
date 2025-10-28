@@ -17,11 +17,7 @@ int main() {
     sp = localtime(&now);
     printf("%d/%d/%02d %d:%02d %s\n",
         sp->tm_mon + 1, sp->tm_mday,
-<<<<<<< HEAD
         sp->tm_year + 1900, sp->tm_hour + 1,
-=======
-        sp->tm_year+1900, sp->tm_hour + 1,
->>>>>>> 9818394e4adeafff1631fd2a5725596004da41fa
         sp->tm_min, tzname[sp->tm_isdst]);
     exit(0);
 }
