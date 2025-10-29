@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -62,12 +63,28 @@ int main(int argc, char* argv[]) {
     }
 
     int line_num;
+    char input_buffer[1024];
     while (1) {
         printf("Enter line number (0 to exit): ");
-        if (scanf("%d", &line_num) != 1) {
-            printf("Invalid input.\n");
+        if (fgets(input_buffer, sizeof(input_buffer), stdin) == NULL) {
+            printf("Input error.\n");
             break;
         }
+
+        int valid_input = 1;
+        for (int i = 0; input_buffer[i] != '\0' && input_buffer[i] != '\n'; i++) {
+            if (!isdigit((unsigned char)input_buffer[i])) {
+                valid_input = 0;
+                break;
+            }
+        }
+
+        if (!valid_input) {
+            printf("Error: Please enter digits only.\n");
+            continue;
+        }
+
+        line_num = atoi(input_buffer);
 
         if (line_num == 0) {
             break;

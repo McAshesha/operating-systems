@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <ctype.h>
 
 volatile sig_atomic_t timeout_occurred = 0;
 
@@ -103,16 +104,32 @@ int main(int argc, char* argv[]) {
     }
 
     int line_num;
+    int first_input = 1;
     
     while (1) {
         timeout_occurred = 0;
         
-        printf("Enter line number (0 to exit). You have 5 seconds: ");
-        fflush(stdout);
+        printf("Enter line number (0 to exit)");
+        if (first_input) {
+            printf(". You have 5 seconds: ");
+            fflush(stdout);
+            
+            alarm(5);
+        } else {
+            printf(": ");
+            fflush(stdout);
+        }
         
-        alarm(5);
-        
-        int result = scanf("%d", &line_num);
+        char input_buffer[100];
+        if (fgets(input_buffer, sizeof(input_buffer), stdin) == NULL) {
+            if (timeout_occurred) {
+                print_entire_file(file_data, file_size);
+                break;
+            } else {
+                printf("Error reading input.\n");
+                continue;
+            }
+        }
         
         alarm(0);
         
@@ -121,12 +138,24 @@ int main(int argc, char* argv[]) {
             break;
         }
         
-        if (result != 1) {
-            printf("Invalid input.\n");
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+        first_input = 0;
+
+        // Проверяем, содержит ли ввод только цифры
+        int valid_input = 1;
+        for (int i = 0; input_buffer[i] != '\0' && input_buffer[i] != '\n'; i++) {
+            if (!isdigit((unsigned char)input_buffer[i])) {
+                valid_input = 0;
+                break;
+            }
+        }
+        
+        if (!valid_input) {
+            printf("Error: Only digits are allowed. Please enter a number.\n");
             continue;
         }
+        
+        // Преобразуем строку в число
+        line_num = atoi(input_buffer);
 
         if (line_num == 0) {
             break;

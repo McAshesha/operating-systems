@@ -4,31 +4,69 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <string.h>
+#include <ctype.h>
 
 volatile sig_atomic_t timeout_occurred = 0;
 
-// Обработчик сигнала ALARM
 void alarm_handler(int sig) {
     timeout_occurred = 1;
 }
 
-// Функция для вывода всего файла
 void print_entire_file(int fd) {
     printf("\nTime is out! Printing entire file:\n");
     printf("====================================\n");
     
-    // Перемещаемся в начало файла
     lseek(fd, 0, SEEK_SET);
     
     char buffer[1024];
     int bytes_read;
     
-    // Читаем и выводим весь файл
     while ((bytes_read = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[bytes_read] = '\0';
         printf("%s", buffer);
     }
     printf("\n====================================\n");
+}
+
+int read_number_with_timeout(int use_timeout) {
+    char input_buffer[100];
+    int number = -1;
+    
+    if (use_timeout) {
+        timeout_occurred = 0;
+        alarm(5);
+        
+        printf("You have 5 seconds: ");
+        fflush(stdout);
+    }
+    
+    if (fgets(input_buffer, sizeof(input_buffer), stdin) != NULL) {
+        if (use_timeout) {
+            alarm(0);
+        }
+        
+        char *ptr = input_buffer;
+        int has_digits = 0;
+        
+        while (*ptr && isspace(*ptr)) {
+            ptr++;
+        }
+        
+        while (*ptr && isdigit(*ptr)) {
+            has_digits = 1;
+            ptr++;
+        }
+        
+        while (*ptr && isspace(*ptr)) {
+            ptr++;
+        }
+        
+        if (has_digits && *ptr == '\0') {
+            number = atoi(input_buffer);
+        }
+    }
+    
+    return number;
 }
 
 int main(int argc, char* argv[]) {
@@ -101,28 +139,26 @@ int main(int argc, char* argv[]) {
     }
 
     int line_num;
+    int first_input = 1;
     
     while (1) {
-        timeout_occurred = 0;
-        
-        printf("Enter line number (0 to exit). You have 5 seconds: ");
-        fflush(stdout);
-        
-        alarm(5);
-        
-        int result = scanf("%d", &line_num);
-        
-        alarm(0);
-        
-        if (timeout_occurred) {
-            print_entire_file(f);
-            break;
+        if (first_input) {
+            line_num = read_number_with_timeout(1);
+            
+            if (timeout_occurred) {
+                print_entire_file(f);
+                break;
+            }
+            
+            first_input = 0;
+        } else {
+            printf("Enter line number (0 to exit): ");
+            fflush(stdout);
+            line_num = read_number_with_timeout(0);
         }
         
-        if (result != 1) {
-            printf("Invalid input.\n");
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+        if (line_num == -1) {
+            printf("Invalid input. Please enter numbers only.\n");
             continue;
         }
 
